@@ -36,6 +36,8 @@ licenses([
 
 # Unsupported target "header_value" with type "bench" omitted
 
+# Unsupported target "method" with type "bench" omitted
+
 # Unsupported target "uri" with type "bench" omitted
 
 rust_library(
@@ -54,7 +56,7 @@ rust_library(
         "cargo-raze",
         "manual",
     ],
-    version = "0.2.3",
+    version = "0.2.4",
     # buildifier: leave-alone
     deps = [
         "@raze__bytes__1_0_1//:bytes",

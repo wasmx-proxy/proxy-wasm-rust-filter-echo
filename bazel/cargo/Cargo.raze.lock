@@ -54,27 +54,13 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7245cd7449cc792608c3c8a9eaf69bd4eabbabf802713748fd739c98b82f0747"
+checksum = "527e8c9ac747e28542699a951517aa9a6945af506cd1f2e1b53a576c17b6cc11"
 dependencies = [
  "bytes",
  "fnv",
  "itoa",
-]
-
-[[package]]
-name = "httpbin"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "http",
- "log",
- "proxy-wasm",
- "serde",
- "serde-tuple-vec-map",
- "serde_derive",
- "serde_json",
 ]
 
 [[package]]
@@ -85,9 +71,9 @@ checksum = "dd25036021b0de88a0aff6b850051563c6516d0bf53f8638938edbb9de732736"
 
 [[package]]
 name = "libc"
-version = "0.2.92"
+version = "0.2.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56d855069fafbb9b344c0f962150cd2c1187975cb1c22c1522c240d8c4986714"
+checksum = "9385f66bf6105b241aa65a61cb923ef20efc665cb9f9bb50ac2f0c4b7f378d41"
 
 [[package]]
 name = "log"
@@ -134,6 +120,20 @@ checksum = "5612e16bf2c7e7f824dde8c2f9735600adffcb08ce05e66d0a7db37786a6ca6d"
 dependencies = [
  "hashbrown",
  "log",
+]
+
+[[package]]
+name = "proxy-wasm-filter-echo"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "http",
+ "log",
+ "proxy-wasm",
+ "serde",
+ "serde-tuple-vec-map",
+ "serde_derive",
+ "serde_json",
 ]
 
 [[package]]
@@ -190,9 +190,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.68"
+version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ce15dd3ed8aa2f8eeac4716d6ef5ab58b6b9256db41d7e1a0224c2788e8fd87"
+checksum = "48fe99c6bd8b1cc636890bcc071842de909d902c81ac7dab53ba33c421ab8ffb"
 dependencies = [
  "proc-macro2",
  "quote",

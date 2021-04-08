@@ -83,12 +83,12 @@ def raze_fetch_remote_crates():
 
     maybe(
         http_archive,
-        name = "raze__http__0_2_3",
-        url = "https://crates.io/api/v1/crates/http/0.2.3/download",
+        name = "raze__http__0_2_4",
+        url = "https://crates.io/api/v1/crates/http/0.2.4/download",
         type = "tar.gz",
-        sha256 = "7245cd7449cc792608c3c8a9eaf69bd4eabbabf802713748fd739c98b82f0747",
-        strip_prefix = "http-0.2.3",
-        build_file = Label("//bazel/cargo/remote:BUILD.http-0.2.3.bazel"),
+        sha256 = "527e8c9ac747e28542699a951517aa9a6945af506cd1f2e1b53a576c17b6cc11",
+        strip_prefix = "http-0.2.4",
+        build_file = Label("//bazel/cargo/remote:BUILD.http-0.2.4.bazel"),
     )
 
     maybe(
@@ -103,12 +103,12 @@ def raze_fetch_remote_crates():
 
     maybe(
         http_archive,
-        name = "raze__libc__0_2_92",
-        url = "https://crates.io/api/v1/crates/libc/0.2.92/download",
+        name = "raze__libc__0_2_93",
+        url = "https://crates.io/api/v1/crates/libc/0.2.93/download",
         type = "tar.gz",
-        sha256 = "56d855069fafbb9b344c0f962150cd2c1187975cb1c22c1522c240d8c4986714",
-        strip_prefix = "libc-0.2.92",
-        build_file = Label("//bazel/cargo/remote:BUILD.libc-0.2.92.bazel"),
+        sha256 = "9385f66bf6105b241aa65a61cb923ef20efc665cb9f9bb50ac2f0c4b7f378d41",
+        strip_prefix = "libc-0.2.93",
+        build_file = Label("//bazel/cargo/remote:BUILD.libc-0.2.93.bazel"),
     )
 
     maybe(
@@ -223,12 +223,12 @@ def raze_fetch_remote_crates():
 
     maybe(
         http_archive,
-        name = "raze__syn__1_0_68",
-        url = "https://crates.io/api/v1/crates/syn/1.0.68/download",
+        name = "raze__syn__1_0_69",
+        url = "https://crates.io/api/v1/crates/syn/1.0.69/download",
         type = "tar.gz",
-        sha256 = "3ce15dd3ed8aa2f8eeac4716d6ef5ab58b6b9256db41d7e1a0224c2788e8fd87",
-        strip_prefix = "syn-1.0.68",
-        build_file = Label("//bazel/cargo/remote:BUILD.syn-1.0.68.bazel"),
+        sha256 = "48fe99c6bd8b1cc636890bcc071842de909d902c81ac7dab53ba33c421ab8ffb",
+        strip_prefix = "syn-1.0.69",
+        build_file = Label("//bazel/cargo/remote:BUILD.syn-1.0.69.bazel"),
     )
 
     maybe(

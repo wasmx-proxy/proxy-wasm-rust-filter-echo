@@ -1,7 +1,7 @@
 load("@rules_rust//rust:rust.bzl", "rust_binary")
 
 rust_binary(
-    name = "proxy_wasm_filter_httpbin",
+    name = "proxy_wasm_filter_echo",
     srcs = glob(["src/*.rs"]),
     crate_type = "cdylib",
     out_binary = True,
