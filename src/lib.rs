@@ -88,7 +88,7 @@ impl HttpContext for HttpHeaders {
                  */
                 let (endpoint, path);
                 {
-                    let mut segments: Vec<&str> = p.split("/").collect::<Vec<&str>>().split_off(1);
+                    let mut segments: Vec<&str> = p.split('/').collect::<Vec<&str>>().split_off(1);
                     endpoint = segments.remove(0);
                     path = segments.join("/");
                 }
@@ -96,7 +96,7 @@ impl HttpContext for HttpHeaders {
                 match &endpoint as &str {
                     "headers" => {
                         let headers = self.get_http_request_headers();
-                        self.send_json_response(StatusCode::OK, Some(Headers { headers: headers }));
+                        self.send_json_response(StatusCode::OK, Some(Headers { headers }));
                     }
                     "user-agent" => {
                         #[derive(Serialize)]

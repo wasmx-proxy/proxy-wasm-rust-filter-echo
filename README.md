@@ -1,5 +1,11 @@
 # proxy-wasm-filter-echo
 
+Add the wasm32 build target if needed
+
+```
+$ rustup target add wasm32-unknown-unknown
+```
+
 Build with:
 
 ```
