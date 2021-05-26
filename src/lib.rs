@@ -94,20 +94,6 @@ impl HttpContext for HttpHeaders {
                 }
 
                 match &endpoint as &str {
-                    "headers" => {
-                        let headers = self.get_http_request_headers();
-                        self.send_json_response(StatusCode::OK, Some(Headers { headers }));
-                    }
-                    "user-agent" => {
-                        #[derive(Serialize)]
-                        struct UA {
-                            #[serde(rename = "user-agent")]
-                            inner: Option<String>,
-                        }
-
-                        let ua = self.get_http_request_header("user-agent");
-                        self.send_json_response(StatusCode::OK, Some(UA { inner: ua }));
-                    }
                     "status" => {
                         match StatusCode::from_bytes(path.as_bytes())
                             .map_err(|_| StatusCode::BAD_REQUEST)
@@ -115,6 +101,35 @@ impl HttpContext for HttpHeaders {
                             Ok(status) => self.send_json_response::<i32>(status, None),
                             Err(status) => self.send_json_response::<i32>(status, None),
                         }
+                    }
+                    "headers" => {
+                        let headers = self.get_http_request_headers();
+                        self.send_json_response(StatusCode::OK, Some(Headers { headers }));
+                    }
+                    // TODO: /ip
+                    "user-agent" => {
+                        #[derive(Serialize)]
+                        struct UA {
+                            #[serde(rename = "user-agent")]
+                            inner: Option<String>,
+                        }
+                        let ua = self.get_http_request_header("user-agent");
+                        self.send_json_response(StatusCode::OK, Some(UA { inner: ua }));
+                    }
+                    "anything" => {
+                        #[derive(Serialize)]
+                        struct Anything {
+                            headers: Vec<(String, String)>,
+                            method: String,
+                        }
+                        let headers = self.get_http_request_headers();
+                        self.send_json_response(
+                            StatusCode::OK,
+                            Some(Anything {
+                                headers: headers,
+                                method: self.get_http_request_header(":method").unwrap(),
+                            }),
+                        );
                     }
                     _ => self.send_json_response::<String>(StatusCode::NOT_FOUND, None),
                 }
