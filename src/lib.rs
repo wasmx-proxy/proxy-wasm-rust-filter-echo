@@ -7,24 +7,17 @@ use log::info;
 use proxy_wasm::traits::*;
 use proxy_wasm::types::*;
 use serde::Serialize;
-
 use std::time::Duration;
-
-#[derive(Serialize)]
-struct Headers {
-    #[serde(with = "tuple_vec_map")]
-    headers: Vec<(String, String)>,
-}
 
 #[no_mangle]
 pub fn _start() {
     proxy_wasm::set_log_level(LogLevel::Info);
-    proxy_wasm::set_root_context(|_| -> Box<dyn RootContext> { Box::new(HttpHeadersRoot) });
+    proxy_wasm::set_root_context(|_| -> Box<dyn RootContext> { Box::new(HttpEchoRoot) });
 }
 
-struct HttpHeadersRoot;
-impl Context for HttpHeadersRoot {}
-impl RootContext for HttpHeadersRoot {
+struct HttpEchoRoot;
+impl Context for HttpEchoRoot {}
+impl RootContext for HttpEchoRoot {
     fn on_vm_start(&mut self, _: usize) -> bool {
         self.set_tick_period(Duration::from_secs(10));
         true
@@ -39,18 +32,13 @@ impl RootContext for HttpHeadersRoot {
         Some(ContextType::HttpContext)
     }
 
-    fn create_http_context(&self, context_id: u32) -> Option<Box<dyn HttpContext>> {
-        Some(Box::new(HttpHeaders {
-            _context_id: context_id,
-        }))
+    fn create_http_context(&self, _: u32) -> Option<Box<dyn HttpContext>> {
+        Some(Box::new(HttpEcho {}))
     }
 }
 
-struct HttpHeaders {
-    _context_id: u32,
-}
-
-impl HttpHeaders {
+struct HttpEcho;
+impl HttpEcho {
     fn send_error_response(&mut self) {
         self.send_http_response(
             StatusCode::INTERNAL_SERVER_ERROR.as_u16() as u32,
@@ -78,8 +66,8 @@ impl HttpHeaders {
     }
 }
 
-impl Context for HttpHeaders {}
-impl HttpContext for HttpHeaders {
+impl Context for HttpEcho {}
+impl HttpContext for HttpEcho {
     fn on_http_request_headers(&mut self, _: usize) -> Action {
         match self.get_http_request_header(":path") {
             Some(p) => {
@@ -103,6 +91,12 @@ impl HttpContext for HttpHeaders {
                         }
                     }
                     "headers" => {
+                        #[derive(Serialize)]
+                        struct Headers {
+                            #[serde(with = "tuple_vec_map")]
+                            headers: Vec<(String, String)>,
+                        }
+
                         let headers = self.get_http_request_headers();
                         self.send_json_response(StatusCode::OK, Some(Headers { headers }));
                     }
@@ -113,6 +107,7 @@ impl HttpContext for HttpHeaders {
                             #[serde(rename = "user-agent")]
                             inner: Option<String>,
                         }
+
                         let ua = self.get_http_request_header("user-agent");
                         self.send_json_response(StatusCode::OK, Some(UA { inner: ua }));
                     }
@@ -122,6 +117,7 @@ impl HttpContext for HttpHeaders {
                             headers: Vec<(String, String)>,
                             method: String,
                         }
+
                         let headers = self.get_http_request_headers();
                         self.send_json_response(
                             StatusCode::OK,
