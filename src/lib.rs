@@ -10,6 +10,7 @@ use matchit::*;
 use proxy_wasm::traits::*;
 use proxy_wasm::types::*;
 use serde::Serialize;
+use std::collections::HashMap;
 use url::Url;
 
 type HttpEchoRouter = Node<HttpEchoHandler>;
@@ -50,26 +51,24 @@ impl RootContext for HttpEchoRoot {
         }
 
         Some(Box::new(HttpEcho {
-            context_id: context_id,
-            data_url: None,
+            context_id,
             router: res.unwrap(),
+            url: None,
+            match_params: HashMap::new(),
         }))
     }
 }
 
 struct HttpEcho {
     context_id: u32,
-    data_url: Option<Url>,
     router: HttpEchoRouter,
+    url: Option<Url>,
+    match_params: HashMap<String, String>,
 }
 
 impl HttpEcho {
-    fn send_error_response(&mut self) {
-        self.send_http_response(
-            StatusCode::INTERNAL_SERVER_ERROR.as_u16() as u32,
-            vec![],
-            None,
-        )
+    fn send_error_response(&mut self, status: StatusCode) {
+        self.send_http_response(status.as_u16() as u32, vec![], None)
     }
 
     fn send_json_response<T>(&mut self, status: StatusCode, body: Option<T>)
@@ -83,7 +82,7 @@ impl HttpEcho {
                     vec![("Content-Type", "application/json")],
                     Some(s.as_bytes()),
                 ),
-                Err(_) => self.send_error_response(),
+                Err(_) => self.send_error_response(StatusCode::INTERNAL_SERVER_ERROR),
             }
         } else {
             self.send_http_response(status.as_u16() as u32, vec![], None)
@@ -103,11 +102,15 @@ impl HttpContext for HttpEcho {
 
         debug!("#{} request url: {}", self.context_id, url);
 
-        let data_url = Url::parse(url.as_str()).expect("failed to parse URL");
+        self.url = Some(Url::parse(url.as_str()).expect("failed parsing request url"));
 
-        if let Ok(matched) = self.router.at(data_url.path()) {
+        if let Ok(matched) = self.router.at(self.url.as_ref().unwrap().path()) {
+            for (key, value) in matched.params.iter() {
+                // copy out of context
+                self.match_params.insert(key.to_owned(), value.to_owned());
+            }
+
             let handler = *matched.value;
-            self.data_url = Some(data_url);
             handler(self)
         } else {
             self.send_json_response::<String>(StatusCode::NOT_FOUND, None);

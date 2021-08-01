@@ -15,7 +15,7 @@ pub(crate) fn send_request_anything(ctx: &mut HttpEcho) {
     ctx.send_json_response(
         StatusCode::OK,
         Some(Anything {
-            headers: headers,
+            headers,
             method: ctx.get_http_request_header(":method").unwrap(),
         }),
     );
@@ -44,8 +44,13 @@ pub(crate) fn send_request_user_agent(ctx: &mut HttpEcho) {
 }
 
 pub(crate) fn echo_status(ctx: &mut HttpEcho) {
-    let path = ctx.data_url.as_ref().unwrap().path();
-    match StatusCode::from_bytes(path.as_bytes()).map_err(|_| StatusCode::BAD_REQUEST) {
+    let status = ctx.match_params.get("code");
+    if status.is_none() {
+        ctx.send_error_response(StatusCode::BAD_REQUEST);
+        return;
+    }
+
+    match StatusCode::from_bytes(status.unwrap().as_bytes()).map_err(|_| StatusCode::BAD_REQUEST) {
         Ok(status) => ctx.send_json_response::<i32>(status, None),
         Err(status) => ctx.send_json_response::<i32>(status, None),
     }
