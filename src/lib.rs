@@ -1,43 +1,68 @@
+#![feature(try_blocks)]
 #[macro_use]
 extern crate serde_derive;
+mod endpoints;
 
-use chrono::{DateTime, Utc};
+use endpoints::*;
 use http::StatusCode;
-use log::info;
+use log::*;
+use matchit::*;
 use proxy_wasm::traits::*;
 use proxy_wasm::types::*;
 use serde::Serialize;
-use std::time::Duration;
+use url::Url;
+
+type HttpEchoRouter = Node<HttpEchoHandler>;
+
+struct HttpEchoRoot {}
 
 #[no_mangle]
 pub fn _start() {
     proxy_wasm::set_log_level(LogLevel::Info);
-    proxy_wasm::set_root_context(|_| -> Box<dyn RootContext> { Box::new(HttpEchoRoot) });
+    proxy_wasm::set_root_context(|_| -> Box<dyn RootContext> { Box::new(HttpEchoRoot {}) });
 }
 
-struct HttpEchoRoot;
 impl Context for HttpEchoRoot {}
 impl RootContext for HttpEchoRoot {
-    fn on_vm_start(&mut self, _: usize) -> bool {
-        self.set_tick_period(Duration::from_secs(10));
-        true
-    }
-
-    fn on_tick(&mut self) {
-        let now: DateTime<Utc> = self.get_current_time().into();
-        info!("ticking at: {}", now);
-    }
-
     fn get_type(&self) -> Option<ContextType> {
         Some(ContextType::HttpContext)
     }
 
-    fn create_http_context(&self, _: u32) -> Option<Box<dyn HttpContext>> {
-        Some(Box::new(HttpEcho {}))
+    fn create_http_context(&self, context_id: u32) -> Option<Box<dyn HttpContext>> {
+        let res: Result<HttpEchoRouter, InsertError> = try {
+            let mut root = HttpEchoRouter::new();
+
+            // explicitly specify type of 1st element
+            let endpoint: fn(&mut HttpEcho) = endpoints::send_request_anything;
+
+            // request info
+            root.insert("/anything", endpoint)?;
+            root.insert("/headers", endpoints::send_request_headers)?;
+            root.insert("/user-agent", endpoints::send_request_user_agent)?;
+
+            // client echo
+            root.insert("/status/:code", endpoints::echo_status)?;
+            root
+        };
+
+        if res.is_err() {
+            return None;
+        }
+
+        Some(Box::new(HttpEcho {
+            context_id: context_id,
+            data_url: None,
+            router: res.unwrap(),
+        }))
     }
 }
 
-struct HttpEcho;
+struct HttpEcho {
+    context_id: u32,
+    data_url: Option<Url>,
+    router: HttpEchoRouter,
+}
+
 impl HttpEcho {
     fn send_error_response(&mut self) {
         self.send_http_response(
@@ -69,70 +94,25 @@ impl HttpEcho {
 impl Context for HttpEcho {}
 impl HttpContext for HttpEcho {
     fn on_http_request_headers(&mut self, _: usize) -> Action {
-        match self.get_http_request_header(":path") {
-            Some(p) => {
-                /*
-                 * METHOD /<endpoint>/<path>
-                 */
-                let (endpoint, path);
-                {
-                    let mut segments: Vec<&str> = p.split('/').collect::<Vec<&str>>().split_off(1);
-                    endpoint = segments.remove(0);
-                    path = segments.join("/");
-                }
+        let url = format!(
+            "{}://{}{}",
+            self.get_http_request_header(":scheme").unwrap(),
+            self.get_http_request_header(":authority").unwrap(),
+            self.get_http_request_header(":path").unwrap()
+        );
 
-                match &endpoint as &str {
-                    "status" => {
-                        match StatusCode::from_bytes(path.as_bytes())
-                            .map_err(|_| StatusCode::BAD_REQUEST)
-                        {
-                            Ok(status) => self.send_json_response::<i32>(status, None),
-                            Err(status) => self.send_json_response::<i32>(status, None),
-                        }
-                    }
-                    "headers" => {
-                        #[derive(Serialize)]
-                        struct Headers {
-                            #[serde(with = "tuple_vec_map")]
-                            headers: Vec<(String, String)>,
-                        }
+        debug!("#{} request url: {}", self.context_id, url);
 
-                        let headers = self.get_http_request_headers();
-                        self.send_json_response(StatusCode::OK, Some(Headers { headers }));
-                    }
-                    // TODO: /ip
-                    "user-agent" => {
-                        #[derive(Serialize)]
-                        struct UA {
-                            #[serde(rename = "user-agent")]
-                            inner: Option<String>,
-                        }
+        let data_url = Url::parse(url.as_str()).expect("failed to parse URL");
 
-                        let ua = self.get_http_request_header("user-agent");
-                        self.send_json_response(StatusCode::OK, Some(UA { inner: ua }));
-                    }
-                    "anything" => {
-                        #[derive(Serialize)]
-                        struct Anything {
-                            headers: Vec<(String, String)>,
-                            method: String,
-                        }
-
-                        let headers = self.get_http_request_headers();
-                        self.send_json_response(
-                            StatusCode::OK,
-                            Some(Anything {
-                                headers: headers,
-                                method: self.get_http_request_header(":method").unwrap(),
-                            }),
-                        );
-                    }
-                    _ => self.send_json_response::<String>(StatusCode::NOT_FOUND, None),
-                }
-
-                Action::Continue
-            }
-            _ => Action::Continue,
+        if let Ok(matched) = self.router.at(data_url.path()) {
+            let handler = *matched.value;
+            self.data_url = Some(data_url);
+            handler(self)
+        } else {
+            self.send_json_response::<String>(StatusCode::NOT_FOUND, None);
         }
+
+        Action::Continue
     }
 }
