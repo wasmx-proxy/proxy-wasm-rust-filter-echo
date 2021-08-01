@@ -10,14 +10,10 @@ crate-type = ["cdylib"]
 [dependencies]
 proxy-wasm = "0.1"
 http = "0.2"
+matchit = "0.4"
+url = "2.2"
 log = "0.4"
-chrono = "0.4"
 serde = { version = "1.0", default-features = false }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 serde_derive = { version = "1.0", default-features = false }
 serde-tuple-vec-map = { version = "1.0", default-features = false }
-
-[package.metadata.raze]
-workspace_path = "//bazel/cargo"
-package_aliases_dir = "bazel/cargo"
-genmode = "Remote"
