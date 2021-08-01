@@ -32,6 +32,23 @@ pub(crate) fn send_request_headers(ctx: &mut HttpEcho) {
     ctx.send_json_response(StatusCode::OK, Some(Headers { headers }));
 }
 
+pub(crate) fn send_request_ip(ctx: &mut HttpEcho) {
+    #[derive(Serialize)]
+    struct RequestIp {
+        origin: String,
+    }
+
+    let origin = {
+        let mut address = String::from_utf8(ctx.get_property(vec!["source", "address"]).unwrap())
+            .expect("Invalid UTF-8 sequence: {}");
+        let port_offset = address.find(':').unwrap_or(address.len());
+        address.replace_range(port_offset.., "");
+        address
+    };
+
+    ctx.send_json_response(StatusCode::OK, Some(RequestIp { origin }));
+}
+
 pub(crate) fn send_request_user_agent(ctx: &mut HttpEcho) {
     #[derive(Serialize)]
     struct UA {
