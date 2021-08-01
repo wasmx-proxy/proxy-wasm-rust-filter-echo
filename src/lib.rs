@@ -33,16 +33,14 @@ impl RootContext for HttpEchoRoot {
         let res: Result<HttpEchoRouter, InsertError> = try {
             let mut root = HttpEchoRouter::new();
 
-            // explicitly specify type of 1st element
+            // explicitly type the 1st element
             let endpoint: fn(&mut HttpEcho) = endpoints::send_request_anything;
 
-            // request info
             root.insert("/anything", endpoint)?;
-            root.insert("/headers", endpoints::send_request_headers)?;
-            root.insert("/user-agent", endpoints::send_request_user_agent)?;
-
-            // client echo
             root.insert("/status/:code", endpoints::echo_status)?;
+            root.insert("/headers", endpoints::send_request_headers)?;
+            root.insert("/ip", endpoints::send_request_ip)?;
+            root.insert("/user-agent", endpoints::send_request_user_agent)?;
             root
         };
 
