@@ -1,5 +1,6 @@
 use crate::*;
 use http::{Method, StatusCode};
+use std::str;
 
 pub(crate) type HttpEchoHandler = fn(&mut HttpEcho) -> ();
 
@@ -101,4 +102,19 @@ pub(crate) fn send_response_headers(ctx: &mut HttpEcho) {
 
     let headers = ctx.get_http_response_headers();
     ctx.send_json_response(StatusCode::OK, Some(UA { headers }));
+}
+
+pub(crate) fn send_decoded_base64(ctx: &mut HttpEcho) {
+    let value = ctx.match_params.get("value");
+    if value.is_none() {
+        ctx.send_error_response(StatusCode::BAD_REQUEST);
+        return;
+    }
+
+    let decoded = base64::decode(value.unwrap()).expect("failed decoding value: {}");
+    ctx.send_response(
+        StatusCode::OK,
+        Some(vec![("Content-Type", "text/plain")]),
+        Some(str::from_utf8(&decoded).expect("Invalid UTF-8 sequence: {}")),
+    );
 }

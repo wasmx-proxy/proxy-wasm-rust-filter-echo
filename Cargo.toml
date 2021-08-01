@@ -8,6 +8,7 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
+base64 = "0.13"
 proxy-wasm = "0.1"
 http = "0.2"
 matchit = "0.4"
