@@ -19,7 +19,7 @@ struct HttpEchoRoot {}
 
 #[no_mangle]
 pub fn _start() {
-    proxy_wasm::set_log_level(LogLevel::Info);
+    proxy_wasm::set_log_level(LogLevel::Debug);
     proxy_wasm::set_root_context(|_| -> Box<dyn RootContext> { Box::new(HttpEchoRoot {}) });
 }
 
@@ -36,11 +36,20 @@ impl RootContext for HttpEchoRoot {
             // explicitly type the 1st element
             let endpoint: fn(&mut HttpEcho) = endpoints::send_request_anything;
 
+            // anything
             root.insert("/anything", endpoint)?;
+
+            // status codes
             root.insert("/status/:code", endpoints::echo_status)?;
+
+            // request inspection
             root.insert("/headers", endpoints::send_request_headers)?;
             root.insert("/ip", endpoints::send_request_ip)?;
             root.insert("/user-agent", endpoints::send_request_user_agent)?;
+
+            // response inspection
+            root.insert("/response-headers", endpoints::send_response_headers)?;
+
             root
         };
 
